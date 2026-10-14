@@ -41,15 +41,7 @@ if arquivo_pdf is not None:
         nova_pag_frente.show_pdf_page(fitz.Rect(0, 0, meio, a4_height), doc_original, pagina_frente.number)
         nova_pag_frente.show_pdf_page(fitz.Rect(meio, 0, a4_width, a4_height), doc_original, pagina_frente.number)
         
-        # 4. Desenha a linha de guilhotina (Cinza médio, pontilhada, forçada pro topo)
-        nova_pag_frente.draw_line(
-            p1=fitz.Point(meio, 0), 
-            p2=fitz.Point(meio, a4_height), 
-            color=(0.4, 0.4, 0.4), # Cinza mais escuro e visível
-            width=1.0, # Um pouco mais espessa
-            dashes="[5 5] 0", # Padrão PDF correto (Traço 5, Espaço 5, Fase 0)
-            overlay=True # Garante que a linha fique por cima da imagem
-        )
+        
 
         # --- PREPARA O VERSO ---
         nova_pag_verso = doc_saida.new_page(width=a4_width, height=a4_height)
@@ -62,15 +54,7 @@ if arquivo_pdf is not None:
             nova_pag_verso.show_pdf_page(fitz.Rect(0, 0, meio, a4_height), doc_original, pagina_verso.number)
             nova_pag_verso.show_pdf_page(fitz.Rect(meio, 0, a4_width, a4_height), doc_original, pagina_verso.number)
         
-        # Desenha a linha de corte no verso também
-        nova_pag_verso.draw_line(
-            p1=fitz.Point(meio, 0), 
-            p2=fitz.Point(meio, a4_height), 
-            color=(0.4, 0.4, 0.4), 
-            width=1.0, 
-            dashes="[5 5] 0",
-            overlay=True
-        )
+        
 
     # 5. Salva o arquivo final
     pdf_bytes = doc_saida.write()
