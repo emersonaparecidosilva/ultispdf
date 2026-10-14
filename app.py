@@ -1,0 +1,85 @@
+import streamlit as st
+import fitz  # PyMuPDF
+import io
+
+st.set_page_config(page_title="Imposição A5 para A4", layout="centered")
+
+st.title("✂️ Gerador de A4 com Linha de Corte")
+st.write("O sistema ajusta a orientação, cola as artes lado a lado em um A4 real e desenha uma linha pontilhada para a guilhotina.")
+
+arquivo_pdf = st.file_uploader("Selecione o arquivo PDF (A5)", type=["pdf"])
+
+if arquivo_pdf is not None:
+    # Carrega o PDF original na memória
+    doc_original = fitz.open(stream=arquivo_pdf.read(), filetype="pdf")
+    
+    # Cria um novo documento PDF em branco (que será o nosso A4)
+    doc_saida = fitz.open()
+
+    # Medidas de um A4 em Paisagem (em pontos tipográficos)
+    # A4 = 297mm x 210mm -> 842 pt x 595 pt
+    a4_width, a4_height = 842.0, 595.0
+    meio = a4_width / 2  # Exatamente 421.0
+
+    total_paginas = len(doc_original)
+
+    for i in range(0, total_paginas, 2):
+        pagina_frente = doc_original[i]
+        # Verifica se tem verso, se não, retorna None
+        pagina_verso = doc_original[i + 1] if i + 1 < total_paginas else None
+
+        # --- PREPARA A FRENTE ---
+        # 1. Validação de Orientação: Se a largura for maior que a altura (Paisagem), vira para Retrato (90 graus)
+        rect_f = pagina_frente.rect
+        if rect_f.width > rect_f.height:
+            pagina_frente.set_rotation(90)
+
+        # 2. Cria a folha A4 física (Paisagem)
+        nova_pag_frente = doc_saida.new_page(width=a4_width, height=a4_height)
+        
+        # 3. Cola a arte A5 do lado esquerdo e do lado direito
+        nova_pag_frente.show_pdf_page(fitz.Rect(0, 0, meio, a4_height), doc_original, pagina_frente.number)
+        nova_pag_frente.show_pdf_page(fitz.Rect(meio, 0, a4_width, a4_height), doc_original, pagina_frente.number)
+        
+        # 4. Desenha a linha de guilhotina (Cinza médio, pontilhada, forçada pro topo)
+        nova_pag_frente.draw_line(
+            p1=fitz.Point(meio, 0), 
+            p2=fitz.Point(meio, a4_height), 
+            color=(0.4, 0.4, 0.4), # Cinza mais escuro e visível
+            width=1.0, # Um pouco mais espessa
+            dashes="[5 5] 0", # Padrão PDF correto (Traço 5, Espaço 5, Fase 0)
+            overlay=True # Garante que a linha fique por cima da imagem
+        )
+
+        # --- PREPARA O VERSO ---
+        nova_pag_verso = doc_saida.new_page(width=a4_width, height=a4_height)
+        
+        if pagina_verso:
+            rect_v = pagina_verso.rect
+            if rect_v.width > rect_v.height:
+                pagina_verso.set_rotation(90)
+            
+            nova_pag_verso.show_pdf_page(fitz.Rect(0, 0, meio, a4_height), doc_original, pagina_verso.number)
+            nova_pag_verso.show_pdf_page(fitz.Rect(meio, 0, a4_width, a4_height), doc_original, pagina_verso.number)
+        
+        # Desenha a linha de corte no verso também
+        nova_pag_verso.draw_line(
+            p1=fitz.Point(meio, 0), 
+            p2=fitz.Point(meio, a4_height), 
+            color=(0.4, 0.4, 0.4), 
+            width=1.0, 
+            dashes="[5 5] 0",
+            overlay=True
+        )
+
+    # 5. Salva o arquivo final
+    pdf_bytes = doc_saida.write()
+    
+    st.success("✨ PDF gerado com sucesso!")
+    
+    st.download_button(
+        label="📥 Baixar PDF A4 Pronto para Imprimir",
+        data=pdf_bytes,
+        file_name="A4_com_linha_de_corte.pdf",
+        mime="application/pdf"
+    )
