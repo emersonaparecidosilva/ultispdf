@@ -4,8 +4,8 @@ import io
 
 st.set_page_config(page_title="Imposição A5 para A4", layout="centered")
 
-st.title("✂️ Gerador de A4 com Linha de Corte")
-st.write("O sistema ajusta a orientação, cola as artes lado a lado em um A4 real e desenha uma linha pontilhada para a guilhotina.")
+st.title("✂️ Gerador de A4 com Base em A5")
+st.write("O sistema ajusta a orientação, cola as artes lado a lado em um A4")
 
 arquivo_pdf = st.file_uploader("Selecione o arquivo PDF (A5)", type=["pdf"])
 
